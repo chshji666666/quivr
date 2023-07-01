@@ -1,79 +1,32 @@
 /* eslint-disable max-lines */
-import { AxiosInstance } from "axios";
 import { UUID } from "crypto";
 import { useCallback, useEffect, useState } from "react";
 
+import {
+  createBrainFromBackend,
+  deleteBrainFromBE,
+  getAllUserBrainsFromBE,
+  getBrainFromBE,
+  getUserDefaultBrainFromBackend,
+} from "@/lib/api";
 import { useAxios, useToast } from "@/lib/hooks";
 
+import {
+  getBrainFromLocalStorage,
+  saveBrainInLocalStorage,
+} from "../helpers/brainLocalStorage";
 import { Brain } from "../types";
-
-const createBrainFromBackend = async (
-  axiosInstance: AxiosInstance,
-  name: string
-): Promise<Brain | undefined> => {
-  try {
-    const createdBrain = (await axiosInstance.post<Brain>(`/brains`, { name }))
-      .data;
-
-    return createdBrain;
-  } catch (error) {
-    console.error(`Error creating brain ${name}`, error);
-  }
-};
-
-const getBrainFromBE = async (
-  axiosInstance: AxiosInstance,
-  brainId: UUID
-): Promise<Brain | undefined> => {
-  try {
-    const brain = (await axiosInstance.get<Brain>(`/brains/${brainId}`)).data;
-
-    return brain;
-  } catch (error) {
-    console.error(`Error getting brain ${brainId}`, error);
-
-    throw new Error(`Error getting brain ${brainId}`);
-  }
-};
-
-const deleteBrainFromBE = async (
-  axiosInstance: AxiosInstance,
-  brainId: UUID
-): Promise<void> => {
-  try {
-    (await axiosInstance.delete(`/brain/${brainId}`)).data;
-  } catch (error) {
-    console.error(`Error deleting brain ${brainId}`, error);
-
-    throw new Error(`Error deleting brain ${brainId}`);
-  }
-};
-
-const getAllUserBrainsFromBE = async (
-  axiosInstance: AxiosInstance
-): Promise<Brain[] | undefined> => {
-  try {
-    const brains = (await axiosInstance.get<{ brains: Brain[] }>(`/brains`))
-      .data;
-
-    console.log("BRAINS", brains);
-
-    return brains.brains;
-  } catch (error) {
-    console.error(`Error getting brain  for current user}`, error);
-
-    throw new Error(`Error getting brain  for current user`);
-  }
-};
 
 export interface BrainStateProps {
   currentBrain: Brain | undefined;
+  currentBrainId: UUID | null;
   allBrains: Brain[];
-  createBrain: (name: string) => Promise<void>;
+  createBrain: (name: string) => Promise<UUID | undefined>;
   deleteBrain: (id: UUID) => Promise<void>;
-  setActiveBrain: (id: UUID) => void;
+  setActiveBrain: ({ id, name }: { id: UUID; name: string }) => void;
   getBrainWithId: (brainId: UUID) => Promise<Brain>;
   fetchAllBrains: () => Promise<void>;
+  setDefaultBrain: () => Promise<void>;
 }
 
 export const useBrainState = (): BrainStateProps => {
@@ -85,15 +38,15 @@ export const useBrainState = (): BrainStateProps => {
 
   const currentBrain = allBrains.find((brain) => brain.id === currentBrainId);
 
-  const setActiveBrain = (id: UUID) => {
-    setCurrentBrainId(id);
-  };
   // options: Record<string, string | unknown>;
 
-  const createBrain = async (name: string) => {
+  const createBrain = async (name: string): Promise<UUID | undefined> => {
     const createdBrain = await createBrainFromBackend(axiosInstance, name);
     if (createdBrain !== undefined) {
       setAllBrains((prevBrains) => [...prevBrains, createdBrain]);
+      saveBrainInLocalStorage(createdBrain);
+
+      return createdBrain.id;
     } else {
       publish({
         variant: "danger",
@@ -119,32 +72,6 @@ export const useBrainState = (): BrainStateProps => {
     return brain;
   };
 
-  // const addDocumentToBrain = (brainId: UUID, document: Document) => {
-  //   const brains = [...allBrains];
-  //   brains.forEach((brain) => {
-  //     if (brain.id === brainId) {
-  //       brain.documents?.push(document);
-
-  //       return; // return as there cannot be more than one brain with that id
-  //     }
-  //   });
-  //   //call update brain with document -> need file sha1
-  //   setAllBrains(brains);
-  // };
-  // const removeDocumentFromBrain = (brainId: UUID, sha1: string) => {
-  //   const brains = [...allBrains];
-  //   brains.forEach((brain) => {
-  //     if (brain.id === brainId) {
-  //       brain.documents = brain.documents?.filter((doc) => doc.sha1 !== sha1);
-
-  //       //remove document endpoint here (use the document hook ?)
-
-  //       return; // return as there cannot be more than one brain with that id
-  //     }
-  //   });
-  //   setAllBrains(brains);
-  // };
-
   const fetchAllBrains = useCallback(async () => {
     try {
       console.log("Fetching all brains for a user");
@@ -157,19 +84,59 @@ export const useBrainState = (): BrainStateProps => {
     }
   }, [axiosInstance]);
 
+  const setActiveBrain = useCallback(
+    ({ id, name }: { id: UUID; name: string }) => {
+      const newActiveBrain = { id, name };
+      saveBrainInLocalStorage(newActiveBrain);
+      setCurrentBrainId(id);
+      console.log("Setting active brain", newActiveBrain);
+    },
+    []
+  );
+
+  const setDefaultBrain = useCallback(async () => {
+    console.log("Setting default brain");
+    const defaultBrain = await getUserDefaultBrainFromBackend(axiosInstance);
+    console.log("defaultBrain", defaultBrain);
+    if (defaultBrain) {
+      saveBrainInLocalStorage(defaultBrain);
+      setActiveBrain({ ...defaultBrain });
+    } else {
+      console.warn("No brains found");
+    }
+  }, [axiosInstance, setActiveBrain]);
+
+  const fetchAndSetActiveBrain = useCallback(async () => {
+    console.log(
+      "Fetching and setting active brain use effect in useBrainState"
+    );
+    const storedBrain = getBrainFromLocalStorage();
+    if (storedBrain?.id !== undefined) {
+      console.log("Setting active brain from local storage");
+      console.log("storedBrain", storedBrain);
+      setActiveBrain({ ...storedBrain });
+    } else {
+      console.log("Setting default brain for first time");
+      await setDefaultBrain();
+    }
+  }, [setDefaultBrain, setActiveBrain]);
+
   useEffect(() => {
     void fetchAllBrains();
-  }, [fetchAllBrains]);
+
+    console.log("brainId", currentBrainId);
+    void fetchAndSetActiveBrain();
+  }, [fetchAllBrains, fetchAndSetActiveBrain, currentBrainId]);
 
   return {
     currentBrain,
+    currentBrainId,
     allBrains,
     createBrain,
     deleteBrain,
     setActiveBrain,
-    // addDocumentToBrain,
-    // removeDocumentFromBrain,
     getBrainWithId,
     fetchAllBrains,
+    setDefaultBrain,
   };
 };
