@@ -24,7 +24,7 @@ export const PasswordForgotten = ({
       onClick={handleRecoverPassword}
       isLoading={isPending}
     >
-      Password forgotten
+      忘记密码
     </Button>
   );
 };

@@ -26,10 +26,10 @@ export const Crawler = (): JSX.Element => {
                 />
               </div>
               <div className="flex flex-col items-center justify-center gap-5">
-                <Button 
-				  isLoading={isCrawling} 
-				  onClick={() => void crawlWebsite(currentBrain?.id)}
-				>
+                              <Button
+                                  isLoading={isCrawling}
+                                  onClick={() => void crawlWebsite(currentBrain?.id)}
+                              >
                   抓取数据
                 </Button>
               </div>
