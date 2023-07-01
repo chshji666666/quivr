@@ -22,13 +22,13 @@ export default function useChats() {
       const response = await axiosInstance.get<{
         chats: ChatEntity[];
       }>(`/chat`);
-      setAllChats(response.data.chats);
+      setAllChats(response.data.chats.reverse());
       console.log("Fetched all chats");
     } catch (error) {
       console.error(error);
       publish({
         variant: "danger",
-        text: "Error occured while fetching your chats",
+        text: "Error occurred while fetching your chats",
       });
     }
   };
