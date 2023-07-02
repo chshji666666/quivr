@@ -7,7 +7,7 @@ import { MdChevronRight } from "react-icons/md";
 
 import { NewChatButton } from "./NewChatButton";
 import { ChatsListItem } from "./components/ChatsListItem/";
-//import { MiniFooter } from "./components/ChatsListItem/components/MiniFooter";
+import { MiniFooter } from "./components/ChatsListItem/components/MiniFooter";
 import { useChatsList } from "./hooks/useChatsList";
 
 export const ChatsList = (): JSX.Element => {
@@ -56,7 +56,7 @@ export const ChatsList = (): JSX.Element => {
                 />
               ))}
             </div>
-                      {/*  <MiniFooter /> */}
+                        <MiniFooter /> 
           </div>
         </motion.div>
         <button

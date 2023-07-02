@@ -50,7 +50,7 @@ export const NavItems = ({
             Github
           </NavLink>*/}
                       <NavLink setOpen={setOpen} to="https://qun.qq.com/qqweb/qunpro/share?_wv=3&_wwv=128&appChannel=share&inviteCode=208ySzsw81s&businessType=9&from=181074&biz=ka&mainSourceId=share&subSourceId=others&jumpsource=shorturl#/out">
-            QQ频道
+            QQ频道讨论
           </NavLink> 
         </>
       )}
