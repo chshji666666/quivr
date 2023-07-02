@@ -70,7 +70,7 @@ export const BrainsDropDown = (): JSX.Element => {
               <div className="flex items-center">
                 <input
                   type="text"
-                  placeholder="Add a new brain"
+                  placeholder="新增一个知识库"
                   value={newBrainName}
                   onChange={(e) => changeBrains(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none"
