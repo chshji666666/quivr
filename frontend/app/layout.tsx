@@ -7,7 +7,7 @@ import { cookies, headers } from "next/headers";
 import { NavBar } from "@/lib/components/NavBar";
 import { TrackingWrapper } from "@/lib/components/TrackingWrapper";
 import { ToastProvider } from "@/lib/components/ui/Toast";
-import { BrainProvider, FeatureFlagsProvider } from "@/lib/context";
+import { BrainProvider } from "@/lib/context";
 import { BrainConfigProvider } from "@/lib/context/BrainConfigProvider/brain-config-provider";
 import { SupabaseProvider } from "@/lib/context/SupabaseProvider";
 import "./globals.css";
@@ -39,7 +39,6 @@ const RootLayout = async ({
       <body
         className={`bg-white text-black min-h-screen flex flex-col dark:bg-black dark:text-white w-full ${inter.className}`}
       >
-        <FeatureFlagsProvider>
           <ToastProvider>
             <SupabaseProvider session={session}>
               <BrainConfigProvider>
@@ -53,7 +52,6 @@ const RootLayout = async ({
             </SupabaseProvider>
           </ToastProvider>
           <Analytics />
-        </FeatureFlagsProvider>
       </body>
     </html>
   );
