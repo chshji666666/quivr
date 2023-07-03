@@ -95,7 +95,7 @@ export const BrainsDropDown = (): JSX.Element => {
               >
                 <Field
                   name="brainname"
-                  placeholder="Add a new brain"
+                  placeholder="新增一个知识库"
                   autoFocus
                   onChange={(e) => changeBrains(e.target.value)}
                 />
